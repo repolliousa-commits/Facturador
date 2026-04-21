@@ -3,12 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Generador de Facturas</title>
-    <link rel="manifest" href="manifest.json">
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Mi PWA en GitHub</title>
+    <link rel="manifest" href="./manifest.json">
+    <meta name="theme-color" content="#007bff">
 </head>
 <body>
-    <div id="root"></div>
-    <script src="sw.js" type="module"></script>
+    <h1>PWA Lista para GitHub Pages</h1>
+    <p>El Service Worker se encargará del modo offline.</p>
+
+    <script>
+        // Registro del Service Worker usando ruta relativa
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('SW registrado', reg))
+                    .catch(err => console.error('Error al registrar SW', err));
+            });
+        }
+    </script>
 </body>
 </html>
