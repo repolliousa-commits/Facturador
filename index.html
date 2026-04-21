@@ -12,23 +12,25 @@
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://unpkg.com/lucide-react@latest"></script>
+    <script src="https://unpkg.com/lucide-react@latest/dist/umd/lucide-react.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body class="bg-zinc-100">
     <div id="root">
-        <div class="flex items-center justify-center min-h-screen">
-            <p class="text-zinc-400 animate-pulse font-sans">Cargando aplicación...</p>
+        <div class="flex flex-col items-center justify-center min-h-screen font-sans">
+            <div class="w-12 h-12 border-4 border-black border-t-transparent rounded-full animate-spin mb-4"></div>
+            <p class="text-zinc-500">Iniciando aplicación...</p>
         </div>
     </div>
 
     <script type="text/babel">
         const { useState, useEffect, useMemo } = React;
         
-        // CORRECCIÓN: Usar LucideReact con mayúsculas y añadir CheckCircle2
-        const { 
-            Plus, Trash2, Download, User, Package, 
-            Loader2, PenTool, ToggleLeft, ToggleRight, CheckCircle2 
-        } = LucideReact; 
+        // Función segura para obtener iconos
+        const Icon = ({ name, size = 20, className = "" }) => {
+            const LucideIcon = LucideReact[name];
+            return LucideIcon ? <LucideIcon size={size} className={className} /> : null;
+        };
 
         const Input = ({ label, value, onChange, type = "text" }) => (
             <div className="w-full">
@@ -45,7 +47,6 @@
         );
 
         const App = () => {
-            const [isLibraryLoaded, setIsLibraryLoaded] = useState(false);
             const [isGenerating, setIsGenerating] = useState(false);
             const [showSuccess, setShowSuccess] = useState(false);
             const [showTax, setShowTax] = useState(true);
@@ -62,18 +63,6 @@
                 client: { name: '', address: '' },
                 items: [{ id: '1', description: '', quantity: '', price: '' }]
             });
-
-            useEffect(() => {
-                const script = document.createElement('script');
-                script.src = "https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js";
-                script.async = true;
-                script.onload = () => setIsLibraryLoaded(true);
-                document.body.appendChild(script);
-
-                if ('serviceWorker' in navigator) {
-                    navigator.serviceWorker.register('./sw.js').catch(err => console.log("SW error", err));
-                }
-            }, []);
 
             const handleInputChange = (field, value) => setInvoiceData(prev => ({ ...prev, [field]: value }));
             const handleNestedChange = (cat, field, value) => setInvoiceData(prev => ({ ...prev, [cat]: { ...prev[cat], [field]: value } }));
@@ -103,7 +92,6 @@
             }, [invoiceData, showTax]);
 
             const handleDownloadPDF = async () => {
-                if (!isLibraryLoaded) return;
                 setIsGenerating(true);
                 const element = document.getElementById('printable-invoice');
                 const opt = {
@@ -117,8 +105,11 @@
                     await window.html2pdf().set(opt).from(element).save();
                     setShowSuccess(true);
                     setTimeout(() => setShowSuccess(false), 3000);
-                } catch (error) { console.error(error); } 
-                finally { setIsGenerating(false); }
+                } catch (error) { 
+                    alert("Error al generar PDF: " + error.message);
+                } finally { 
+                    setIsGenerating(false); 
+                }
             };
 
             return (
@@ -127,17 +118,17 @@
                         <header className="flex flex-col md:flex-row justify-between items-center gap-4 bg-white p-5 rounded-2xl shadow-sm print:hidden">
                             <div>
                                 <h1 className="text-xl font-bold">Generador de Facturas</h1>
-                                <p className="text-sm text-zinc-500 italic">Formato corregido para una sola página</p>
+                                <p className="text-sm text-zinc-500 italic">Presiona F12 si no carga para ver errores.</p>
                             </div>
                             <button onClick={handleDownloadPDF} disabled={isGenerating} className="flex items-center gap-2 bg-black text-white px-6 py-3 rounded-xl font-bold hover:bg-zinc-800 transition-all active:scale-95 disabled:bg-zinc-400">
-                                {isGenerating ? <Loader2 className="animate-spin" size={20} /> : <Download size={20} />}
+                                {isGenerating ? <Icon name="Loader2" className="animate-spin" /> : <Icon name="Download" />}
                                 {isGenerating ? 'Guardando...' : 'Descargar PDF'}
                             </button>
                         </header>
 
                         {showSuccess && (
                             <div className="bg-green-600 text-white px-4 py-2 rounded-xl flex items-center gap-2 justify-center animate-fade-in print:hidden">
-                                <CheckCircle2 size={16} /> ¡PDF generado correctamente!
+                                <Icon name="CheckCircle2" size={16} /> ¡PDF generado correctamente!
                             </div>
                         )}
 
@@ -147,7 +138,7 @@
                                     <div className="flex justify-between items-center">
                                         <span className="text-xs font-bold uppercase text-zinc-400">ITBIS</span>
                                         <button onClick={() => setShowTax(!showTax)} className={`flex items-center gap-2 text-xs font-bold px-3 py-1.5 rounded-lg transition-all ${showTax ? 'bg-black text-white' : 'bg-zinc-100 text-zinc-400'}`}>
-                                            {showTax ? <ToggleRight size={20} /> : <ToggleLeft size={20} />}
+                                            {showTax ? <Icon name="ToggleRight" /> : <Icon name="ToggleLeft" />}
                                             {showTax ? 'ACTIVO' : 'DESACTIVO'}
                                         </button>
                                     </div>
@@ -155,7 +146,7 @@
                                 </div>
 
                                 <div className="bg-white p-4 rounded-2xl shadow-sm border border-zinc-200 space-y-3">
-                                    <h2 className="text-xs font-bold uppercase text-zinc-400 mb-2 flex items-center gap-2"><User size={14} /> Cabecera</h2>
+                                    <h2 className="text-xs font-bold uppercase text-zinc-400 mb-2 flex items-center gap-2"><Icon name="User" size={14} /> Cabecera</h2>
                                     <Input label="Nº Factura" value={invoiceData.invoiceNumber} onChange={v => handleInputChange('invoiceNumber', v)} />
                                     <Input label="Orden Nº" value={invoiceData.orderNumber} onChange={v => handleInputChange('orderNumber', v)} />
                                     <Input label="Despachado a" value={invoiceData.client.name} onChange={v => handleNestedChange('client', 'name', v)} />
@@ -164,20 +155,20 @@
                                 </div>
 
                                 <div className="bg-white p-4 rounded-2xl shadow-sm border border-zinc-200 space-y-3">
-                                    <h2 className="text-xs font-bold uppercase text-zinc-400 mb-2 flex items-center gap-2"><PenTool size={14} /> Firmas</h2>
+                                    <h2 className="text-xs font-bold uppercase text-zinc-400 mb-2 flex items-center gap-2"><Icon name="PenTool" size={14} /> Firmas</h2>
                                     <Input label="Nombre Despachador" value={invoiceData.dispatchedBy} onChange={v => handleInputChange('dispatchedBy', v)} />
                                     <Input label="Nombre Receptor" value={invoiceData.receivedBy} onChange={v => handleInputChange('receivedBy', v)} />
                                 </div>
 
                                 <div className="bg-white p-4 rounded-2xl shadow-sm border border-zinc-200">
                                     <div className="flex justify-between items-center mb-3">
-                                        <h2 className="text-xs font-bold uppercase text-zinc-400 flex items-center gap-2"><Package size={14} /> Artículos</h2>
-                                        <button onClick={addItem} className="p-1.5 bg-zinc-900 text-white rounded-lg"><Plus size={16} /></button>
+                                        <h2 className="text-xs font-bold uppercase text-zinc-400 flex items-center gap-2"><Icon name="Package" size={14} /> Artículos</h2>
+                                        <button onClick={addItem} className="p-1.5 bg-zinc-900 text-white rounded-lg"><Icon name="Plus" size={16} /></button>
                                     </div>
                                     <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
                                         {invoiceData.items.map((item, idx) => (
                                             <div key={item.id} className="p-3 bg-zinc-50 rounded-xl border border-zinc-100 relative group">
-                                                <button onClick={() => removeItem(item.id)} className="absolute -top-1 -right-1 text-zinc-300 hover:text-red-500"><Trash2 size={14} /></button>
+                                                <button onClick={() => removeItem(item.id)} className="absolute -top-1 -right-1 text-zinc-300 hover:text-red-500"><Icon name="Trash2" size={14} /></button>
                                                 <Input label={`Art. ${idx + 1}`} value={item.description} onChange={v => updateItem(item.id, 'description', v)} />
                                                 <div className="flex gap-2 mt-2">
                                                     <Input label="Cant." type="number" value={item.quantity} onChange={v => updateItem(item.id, 'quantity', v)} />
@@ -191,7 +182,7 @@
 
                             <main className="lg:col-span-8 flex justify-center bg-zinc-300 p-4 md:p-8 overflow-auto rounded-3xl">
                                 <div id="printable-invoice" className="bg-white text-black flex flex-col shadow-2xl" style={{ width: '210mm', minHeight: '297mm', padding: '15mm', boxSizing: 'border-box' }}>
-                                    {/* Contenido de la factura (Igual al anterior) */}
+                                    {/* CABECERA FACTURA */}
                                     <div className="border-[3px] border-black rounded-[30px] p-8 mb-6">
                                         <div className="flex justify-between items-start">
                                             <h1 className="text-5xl font-black tracking-tighter">FACTURA</h1>
@@ -226,6 +217,7 @@
                                         </div>
                                     </div>
 
+                                    {/* TABLA DE ARTICULOS */}
                                     <div className="border-[3px] border-black rounded-[30px] overflow-hidden flex flex-col mb-6 flex-grow">
                                         <table className="w-full border-collapse">
                                             <thead>
@@ -245,6 +237,7 @@
                                                         <td className="py-3 text-right px-4 font-black text-base">{item.quantity && item.price ? (parseFloat(item.quantity) * parseFloat(item.price)).toLocaleString() : ''}</td>
                                                     </tr>
                                                 ))}
+                                                {/* Filas vacías de relleno */}
                                                 {Array.from({ length: Math.max(0, 10 - invoiceData.items.length) }).map((_, i) => (
                                                     <tr key={`fill-${i}`} className="border-b border-zinc-100 last:border-b-0 h-10">
                                                         <td className="border-r-[3px] border-black"></td><td className="border-r-[3px] border-black"></td><td className="border-r-[3px] border-black"></td><td></td>
@@ -254,6 +247,7 @@
                                         </table>
                                     </div>
 
+                                    {/* TOTALES Y FIRMAS */}
                                     <div className="flex justify-between items-end gap-8 pb-4">
                                         <div className="flex-grow grid grid-cols-2 gap-10">
                                             <div className="text-center">
