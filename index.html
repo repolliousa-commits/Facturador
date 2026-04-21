@@ -6,6 +6,7 @@
     <title>Generador de Facturas</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#000000">
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -13,15 +14,21 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://unpkg.com/lucide-react@latest"></script>
 </head>
-<body>
-    <div id="root"></div>
+<body class="bg-zinc-100">
+    <div id="root">
+        <div class="flex items-center justify-center min-h-screen">
+            <p class="text-zinc-400 animate-pulse font-sans">Cargando aplicación...</p>
+        </div>
+    </div>
 
     <script type="text/babel">
         const { useState, useEffect, useMemo } = React;
+        
+        // CORRECCIÓN: Usar LucideReact con mayúsculas y añadir CheckCircle2
         const { 
             Plus, Trash2, Download, User, Package, 
             Loader2, PenTool, ToggleLeft, ToggleRight, CheckCircle2 
-        } = lucideReact;
+        } = LucideReact; 
 
         const Input = ({ label, value, onChange, type = "text" }) => (
             <div className="w-full">
@@ -64,7 +71,7 @@
                 document.body.appendChild(script);
 
                 if ('serviceWorker' in navigator) {
-                    navigator.serviceWorker.register('./sw.js');
+                    navigator.serviceWorker.register('./sw.js').catch(err => console.log("SW error", err));
                 }
             }, []);
 
@@ -115,7 +122,7 @@
             };
 
             return (
-                <div className="min-h-screen bg-zinc-100 p-2 md:p-4 font-sans text-zinc-900">
+                <div className="min-h-screen p-2 md:p-4 font-sans text-zinc-900">
                     <div className="max-w-6xl mx-auto space-y-4">
                         <header className="flex flex-col md:flex-row justify-between items-center gap-4 bg-white p-5 rounded-2xl shadow-sm print:hidden">
                             <div>
@@ -184,6 +191,7 @@
 
                             <main className="lg:col-span-8 flex justify-center bg-zinc-300 p-4 md:p-8 overflow-auto rounded-3xl">
                                 <div id="printable-invoice" className="bg-white text-black flex flex-col shadow-2xl" style={{ width: '210mm', minHeight: '297mm', padding: '15mm', boxSizing: 'border-box' }}>
+                                    {/* Contenido de la factura (Igual al anterior) */}
                                     <div className="border-[3px] border-black rounded-[30px] p-8 mb-6">
                                         <div className="flex justify-between items-start">
                                             <h1 className="text-5xl font-black tracking-tighter">FACTURA</h1>
@@ -237,7 +245,7 @@
                                                         <td className="py-3 text-right px-4 font-black text-base">{item.quantity && item.price ? (parseFloat(item.quantity) * parseFloat(item.price)).toLocaleString() : ''}</td>
                                                     </tr>
                                                 ))}
-                                                {Array.from({ length: Math.max(0, 12 - invoiceData.items.length) }).map((_, i) => (
+                                                {Array.from({ length: Math.max(0, 10 - invoiceData.items.length) }).map((_, i) => (
                                                     <tr key={`fill-${i}`} className="border-b border-zinc-100 last:border-b-0 h-10">
                                                         <td className="border-r-[3px] border-black"></td><td className="border-r-[3px] border-black"></td><td className="border-r-[3px] border-black"></td><td></td>
                                                     </tr>
