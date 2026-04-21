@@ -11,32 +11,32 @@
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://unpkg.com/lucide-react@latest/dist/umd/lucide-react.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body class="bg-zinc-100">
     <div id="root">
         <div class="flex flex-col items-center justify-center min-h-screen font-sans">
-            <div class="w-12 h-12 border-4 border-black border-t-transparent rounded-full animate-spin mb-4"></div>
-            <p class="text-zinc-500">Iniciando aplicación...</p>
+            <div class="w-10 h-10 border-4 border-black border-t-transparent rounded-full animate-spin mb-4"></div>
+            <p class="text-zinc-500 font-medium">Cargando sistema...</p>
         </div>
     </div>
 
     <script type="text/babel">
         const { useState, useEffect, useMemo } = React;
-        
-        // Función segura para obtener iconos
-        const Icon = ({ name, size = 20, className = "" }) => {
-            const LucideIcon = LucideReact[name];
-            return LucideIcon ? <LucideIcon size={size} className={className} /> : null;
+
+        // Iconos SVG Integrados para evitar errores de librerías externas
+        const Icons = {
+            Plus: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>,
+            Trash: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>,
+            Download: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>,
+            User: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>,
+            Package: () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="16.5" y1="9.4" x2="7.5" y2="4.28"></line><polyline points="3.29 7 12 12 20.71 7"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>,
+            Check: () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
         };
 
         const Input = ({ label, value, onChange, type = "text" }) => (
             <div className="w-full">
-                <label className="block text-[10px] font-bold text-zinc-400 uppercase mb-1 ml-1 tracking-wider">
-                    {label}
-                </label>
+                <label className="block text-[10px] font-bold text-zinc-400 uppercase mb-1 ml-1 tracking-wider">{label}</label>
                 <input
                     type={type}
                     value={value}
@@ -55,7 +55,6 @@
                 invoiceNumber: '',
                 orderNumber: '',
                 issueDate: new Date().toISOString().split('T')[0],
-                currency: 'RD$',
                 taxRate: 18, 
                 conditions: '',
                 dispatchedBy: '',
@@ -98,7 +97,7 @@
                     margin: 0,
                     filename: `Factura_${invoiceData.invoiceNumber || 'Recibo'}.pdf`,
                     image: { type: 'jpeg', quality: 0.98 },
-                    html2canvas: { scale: 2, useCORS: true, logging: false, scrollY: 0 },
+                    html2canvas: { scale: 2, useCORS: true, logging: false },
                     jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
                 };
                 try {
@@ -106,7 +105,7 @@
                     setShowSuccess(true);
                     setTimeout(() => setShowSuccess(false), 3000);
                 } catch (error) { 
-                    alert("Error al generar PDF: " + error.message);
+                    console.error(error);
                 } finally { 
                     setIsGenerating(false); 
                 }
@@ -118,17 +117,17 @@
                         <header className="flex flex-col md:flex-row justify-between items-center gap-4 bg-white p-5 rounded-2xl shadow-sm print:hidden">
                             <div>
                                 <h1 className="text-xl font-bold">Generador de Facturas</h1>
-                                <p className="text-sm text-zinc-500 italic">Presiona F12 si no carga para ver errores.</p>
+                                <p className="text-xs text-zinc-400">Versión estable para GitHub Pages</p>
                             </div>
                             <button onClick={handleDownloadPDF} disabled={isGenerating} className="flex items-center gap-2 bg-black text-white px-6 py-3 rounded-xl font-bold hover:bg-zinc-800 transition-all active:scale-95 disabled:bg-zinc-400">
-                                {isGenerating ? <Icon name="Loader2" className="animate-spin" /> : <Icon name="Download" />}
-                                {isGenerating ? 'Guardando...' : 'Descargar PDF'}
+                                {isGenerating ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div> : <Icons.Download />}
+                                {isGenerating ? 'Generando...' : 'Descargar PDF'}
                             </button>
                         </header>
 
                         {showSuccess && (
-                            <div className="bg-green-600 text-white px-4 py-2 rounded-xl flex items-center gap-2 justify-center animate-fade-in print:hidden">
-                                <Icon name="CheckCircle2" size={16} /> ¡PDF generado correctamente!
+                            <div className="bg-green-600 text-white px-4 py-2 rounded-xl flex items-center gap-2 justify-center animate-bounce print:hidden">
+                                <Icons.Check /> ¡PDF Guardado!
                             </div>
                         )}
 
@@ -136,39 +135,32 @@
                             <aside className="lg:col-span-4 space-y-4 print:hidden">
                                 <div className="bg-white p-4 rounded-2xl shadow-sm border border-zinc-200">
                                     <div className="flex justify-between items-center">
-                                        <span className="text-xs font-bold uppercase text-zinc-400">ITBIS</span>
-                                        <button onClick={() => setShowTax(!showTax)} className={`flex items-center gap-2 text-xs font-bold px-3 py-1.5 rounded-lg transition-all ${showTax ? 'bg-black text-white' : 'bg-zinc-100 text-zinc-400'}`}>
-                                            {showTax ? <Icon name="ToggleRight" /> : <Icon name="ToggleLeft" />}
-                                            {showTax ? 'ACTIVO' : 'DESACTIVO'}
+                                        <span className="text-xs font-bold uppercase text-zinc-400">Impuestos (ITBIS)</span>
+                                        <button onClick={() => setShowTax(!showTax)} className={`px-4 py-1 rounded-full text-[10px] font-black transition-all ${showTax ? 'bg-black text-white' : 'bg-zinc-200 text-zinc-500'}`}>
+                                            {showTax ? 'ON' : 'OFF'}
                                         </button>
                                     </div>
-                                    {showTax && <div className="mt-3"><Input label="% de ITBIS" type="number" value={invoiceData.taxRate} onChange={v => handleInputChange('taxRate', v)} /></div>}
+                                    {showTax && <div className="mt-3"><Input label="% ITBIS" type="number" value={invoiceData.taxRate} onChange={v => handleInputChange('taxRate', v)} /></div>}
                                 </div>
 
                                 <div className="bg-white p-4 rounded-2xl shadow-sm border border-zinc-200 space-y-3">
-                                    <h2 className="text-xs font-bold uppercase text-zinc-400 mb-2 flex items-center gap-2"><Icon name="User" size={14} /> Cabecera</h2>
+                                    <h2 className="text-[10px] font-black uppercase text-zinc-400 flex items-center gap-2"><Icons.User /> Cliente y Datos</h2>
                                     <Input label="Nº Factura" value={invoiceData.invoiceNumber} onChange={v => handleInputChange('invoiceNumber', v)} />
                                     <Input label="Orden Nº" value={invoiceData.orderNumber} onChange={v => handleInputChange('orderNumber', v)} />
-                                    <Input label="Despachado a" value={invoiceData.client.name} onChange={v => handleNestedChange('client', 'name', v)} />
+                                    <Input label="Cliente" value={invoiceData.client.name} onChange={v => handleNestedChange('client', 'name', v)} />
                                     <Input label="Dirección" value={invoiceData.client.address} onChange={v => handleNestedChange('client', 'address', v)} />
                                     <Input label="Condiciones" value={invoiceData.conditions} onChange={v => handleInputChange('conditions', v)} />
                                 </div>
 
-                                <div className="bg-white p-4 rounded-2xl shadow-sm border border-zinc-200 space-y-3">
-                                    <h2 className="text-xs font-bold uppercase text-zinc-400 mb-2 flex items-center gap-2"><Icon name="PenTool" size={14} /> Firmas</h2>
-                                    <Input label="Nombre Despachador" value={invoiceData.dispatchedBy} onChange={v => handleInputChange('dispatchedBy', v)} />
-                                    <Input label="Nombre Receptor" value={invoiceData.receivedBy} onChange={v => handleInputChange('receivedBy', v)} />
-                                </div>
-
                                 <div className="bg-white p-4 rounded-2xl shadow-sm border border-zinc-200">
                                     <div className="flex justify-between items-center mb-3">
-                                        <h2 className="text-xs font-bold uppercase text-zinc-400 flex items-center gap-2"><Icon name="Package" size={14} /> Artículos</h2>
-                                        <button onClick={addItem} className="p-1.5 bg-zinc-900 text-white rounded-lg"><Icon name="Plus" size={16} /></button>
+                                        <h2 className="text-[10px] font-black uppercase text-zinc-400 flex items-center gap-2"><Icons.Package /> Artículos</h2>
+                                        <button onClick={addItem} className="p-1 bg-black text-white rounded-lg"><Icons.Plus /></button>
                                     </div>
                                     <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
                                         {invoiceData.items.map((item, idx) => (
-                                            <div key={item.id} className="p-3 bg-zinc-50 rounded-xl border border-zinc-100 relative group">
-                                                <button onClick={() => removeItem(item.id)} className="absolute -top-1 -right-1 text-zinc-300 hover:text-red-500"><Icon name="Trash2" size={14} /></button>
+                                            <div key={item.id} className="p-3 bg-zinc-50 rounded-xl border border-zinc-100 relative">
+                                                <button onClick={() => removeItem(item.id)} className="absolute top-2 right-2 text-zinc-300 hover:text-red-500"><Icons.Trash /></button>
                                                 <Input label={`Art. ${idx + 1}`} value={item.description} onChange={v => updateItem(item.id, 'description', v)} />
                                                 <div className="flex gap-2 mt-2">
                                                     <Input label="Cant." type="number" value={item.quantity} onChange={v => updateItem(item.id, 'quantity', v)} />
@@ -180,107 +172,58 @@
                                 </div>
                             </aside>
 
-                            <main className="lg:col-span-8 flex justify-center bg-zinc-300 p-4 md:p-8 overflow-auto rounded-3xl">
-                                <div id="printable-invoice" className="bg-white text-black flex flex-col shadow-2xl" style={{ width: '210mm', minHeight: '297mm', padding: '15mm', boxSizing: 'border-box' }}>
-                                    {/* CABECERA FACTURA */}
+                            <main className="lg:col-span-8 flex justify-center bg-zinc-200 p-4 rounded-3xl overflow-auto">
+                                <div id="printable-invoice" className="bg-white text-black shadow-2xl" style={{ width: '210mm', minHeight: '297mm', padding: '15mm' }}>
                                     <div className="border-[3px] border-black rounded-[30px] p-8 mb-6">
                                         <div className="flex justify-between items-start">
                                             <h1 className="text-5xl font-black tracking-tighter">FACTURA</h1>
-                                            <div className="space-y-2 text-right">
-                                                <div className="flex items-center justify-end gap-3 text-2xl font-bold">
-                                                    <span>Nº.</span>
-                                                    <div className="border-b-2 border-black min-w-[120px] text-center px-2">{invoiceData.invoiceNumber || '______'}</div>
-                                                </div>
-                                                <div className="flex items-center justify-end gap-3 text-sm">
-                                                    <span className="font-bold">Fecha:</span>
-                                                    <div className="border-b border-black min-w-[150px] text-left px-2">{invoiceData.issueDate}</div>
-                                                </div>
-                                                <div className="flex items-center justify-end gap-3 text-sm">
-                                                    <span className="font-bold">Orden Nº.</span>
-                                                    <div className="border-b border-black min-w-[150px] text-left px-2">{invoiceData.orderNumber || '______'}</div>
-                                                </div>
+                                            <div className="text-right space-y-1">
+                                                <div className="text-2xl font-bold">Nº {invoiceData.invoiceNumber || '---'}</div>
+                                                <div className="text-xs font-bold uppercase">Fecha: {invoiceData.issueDate}</div>
+                                                <div className="text-xs font-bold uppercase">Orden: {invoiceData.orderNumber || '---'}</div>
                                             </div>
                                         </div>
-                                        <div className="mt-10 space-y-5">
-                                            <div className="flex items-end gap-3">
-                                                <span className="text-xs font-black uppercase whitespace-nowrap">Despachado a:</span>
-                                                <div className="border-b border-black flex-grow h-6 px-2 text-base">{invoiceData.client.name}</div>
-                                            </div>
-                                            <div className="flex items-end gap-3">
-                                                <span className="text-xs font-black uppercase whitespace-nowrap">Dirección:</span>
-                                                <div className="border-b border-black flex-grow h-6 px-2 text-base">{invoiceData.client.address}</div>
-                                            </div>
-                                            <div className="flex items-end gap-3">
-                                                <span className="text-xs font-black uppercase whitespace-nowrap">Condiciones:</span>
-                                                <div className="border-b border-black flex-grow h-6 px-2 text-base">{invoiceData.conditions}</div>
-                                            </div>
+                                        <div className="mt-10 space-y-4">
+                                            <div className="flex border-b border-black pb-1"><span className="text-[10px] font-black uppercase w-24">Cliente:</span><span className="text-sm uppercase font-medium">{invoiceData.client.name}</span></div>
+                                            <div className="flex border-b border-black pb-1"><span className="text-[10px] font-black uppercase w-24">Dirección:</span><span className="text-sm uppercase font-medium">{invoiceData.client.address}</span></div>
+                                            <div className="flex border-b border-black pb-1"><span className="text-[10px] font-black uppercase w-24">Condiciones:</span><span className="text-sm uppercase font-medium">{invoiceData.conditions}</span></div>
                                         </div>
                                     </div>
 
-                                    {/* TABLA DE ARTICULOS */}
-                                    <div className="border-[3px] border-black rounded-[30px] overflow-hidden flex flex-col mb-6 flex-grow">
+                                    <div className="border-[3px] border-black rounded-[30px] overflow-hidden mb-6 min-h-[400px]">
                                         <table className="w-full border-collapse">
                                             <thead>
-                                                <tr className="border-b-[3px] border-black text-[10px] font-black bg-zinc-50">
-                                                    <th className="border-r-[3px] border-black py-3 w-20 text-center uppercase">CANT.</th>
-                                                    <th className="border-r-[3px] border-black py-3 px-4 text-center uppercase">ARTICULO (S)</th>
-                                                    <th className="border-r-[3px] border-black py-3 w-32 text-center uppercase leading-tight">PRECIO<br/>UNITARIO</th>
-                                                    <th className="py-3 w-32 text-center uppercase">TOTAL</th>
+                                                <tr className="border-b-[3px] border-black bg-zinc-50 text-[10px] font-black uppercase">
+                                                    <th className="border-r-[3px] border-black p-3 w-16">Cant.</th>
+                                                    <th className="border-r-[3px] border-black p-3 text-left">Descripción</th>
+                                                    <th className="border-r-[3px] border-black p-3 w-28 text-right">Precio</th>
+                                                    <th className="p-3 w-28 text-right">Total</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
                                                 {invoiceData.items.map((item) => (
-                                                    <tr key={item.id} className="border-b border-zinc-200">
-                                                        <td className="border-r-[3px] border-black py-3 text-center font-bold text-base">{item.quantity}</td>
-                                                        <td className="border-r-[3px] border-black py-3 px-4 text-base">{item.description}</td>
-                                                        <td className="border-r-[3px] border-black py-3 text-right px-4 text-base">{item.price ? parseFloat(item.price).toLocaleString() : ''}</td>
-                                                        <td className="py-3 text-right px-4 font-black text-base">{item.quantity && item.price ? (parseFloat(item.quantity) * parseFloat(item.price)).toLocaleString() : ''}</td>
-                                                    </tr>
-                                                ))}
-                                                {/* Filas vacías de relleno */}
-                                                {Array.from({ length: Math.max(0, 10 - invoiceData.items.length) }).map((_, i) => (
-                                                    <tr key={`fill-${i}`} className="border-b border-zinc-100 last:border-b-0 h-10">
-                                                        <td className="border-r-[3px] border-black"></td><td className="border-r-[3px] border-black"></td><td className="border-r-[3px] border-black"></td><td></td>
+                                                    <tr key={item.id} className="border-b border-zinc-200 text-sm">
+                                                        <td className="border-r-[3px] border-black p-3 text-center font-bold">{item.quantity}</td>
+                                                        <td className="border-r-[3px] border-black p-3 uppercase">{item.description}</td>
+                                                        <td className="border-r-[3px] border-black p-3 text-right">{item.price ? parseFloat(item.price).toLocaleString() : ''}</td>
+                                                        <td className="p-3 text-right font-black">{(parseFloat(item.quantity || 0) * parseFloat(item.price || 0)).toLocaleString()}</td>
                                                     </tr>
                                                 ))}
                                             </tbody>
                                         </table>
                                     </div>
 
-                                    {/* TOTALES Y FIRMAS */}
-                                    <div className="flex justify-between items-end gap-8 pb-4">
-                                        <div className="flex-grow grid grid-cols-2 gap-10">
-                                            <div className="text-center">
-                                                <div className="min-h-[30px] font-bold text-lg mb-1 italic">{invoiceData.dispatchedBy}</div>
-                                                <div className="border-t-2 border-black pt-2 text-[10px] font-black uppercase">Despachado por</div>
-                                            </div>
-                                            <div className="text-center">
-                                                <div className="min-h-[30px] font-bold text-lg mb-1 italic">{invoiceData.receivedBy}</div>
-                                                <div className="border-t-2 border-black pt-2 text-[10px] font-black uppercase">Recibido por</div>
-                                            </div>
-                                        </div>
-                                        <div className="w-72">
-                                            <div className="border-[3px] border-black rounded-[25px] overflow-hidden text-xs font-black uppercase">
-                                                <div className="flex justify-between border-b-2 border-black p-3"><span>Sub-Total</span><span>{totals.subtotal.toLocaleString()}</span></div>
-                                                {showTax && <div className="flex justify-between border-b-2 border-black p-3"><span>ITBIS ({invoiceData.taxRate}%)</span><span>{totals.taxAmount.toLocaleString()}</span></div>}
-                                                <div className="flex justify-between bg-zinc-100 p-4 text-base font-black"><span>Total a Pagar</span><span className="text-lg">{totals.total.toLocaleString()}</span></div>
-                                            </div>
+                                    <div className="flex justify-end">
+                                        <div className="w-64 border-[3px] border-black rounded-[20px] overflow-hidden font-black uppercase text-xs">
+                                            <div className="flex justify-between p-3 border-b-2 border-black"><span>Sub-Total</span><span>{totals.subtotal.toLocaleString()}</span></div>
+                                            {showTax && <div className="flex justify-between p-3 border-b-2 border-black"><span>ITBIS ({invoiceData.taxRate}%)</span><span>{totals.taxAmount.toLocaleString()}</span></div>}
+                                            <div className="flex justify-between p-4 bg-zinc-100 text-base"><span>Total</span><span>{totals.total.toLocaleString()}</span></div>
                                         </div>
                                     </div>
                                 </div>
                             </main>
                         </div>
                     </div>
-                    <style>{`
-                        @media print {
-                            @page { size: A4; margin: 0; }
-                            body { background: white !important; padding: 0; margin: 0; }
-                            .print\\:hidden { display: none !important; }
-                            #printable-invoice { box-shadow: none !important; border: none !important; margin: 0 !important; width: 210mm !important; height: 297mm !important; }
-                        }
-                        .animate-fade-in { animation: fadeIn 0.3s ease-out; }
-                        @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
-                    `}</style>
                 </div>
             );
         };
